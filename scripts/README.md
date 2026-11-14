@@ -1,0 +1,1 @@
+﻿-- Scripts compartidos del repo. ETL Carlo: ver solucion-2-etl/sql/

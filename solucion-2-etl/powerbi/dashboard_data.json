@@ -1,0 +1,139 @@
+{
+  "vendedores": [
+    {
+      "vendedor": "MÃ³nica DÃ­az",
+      "total": 2363400.0,
+      "margen": 28577.419354
+    },
+    {
+      "vendedor": "LucÃ­a Torres",
+      "total": 2227300.0,
+      "margen": 19160.869565
+    },
+    {
+      "vendedor": "Pedro Salazar",
+      "total": 2022400.0,
+      "margen": 26952.380952
+    },
+    {
+      "vendedor": "Carlos Ramos",
+      "total": 2019000.0,
+      "margen": 30100.0
+    },
+    {
+      "vendedor": "Ana Vega",
+      "total": 1984700.0,
+      "margen": 21409.090909
+    }
+  ],
+  "inspecciones": [
+    {
+      "resultado": "Aprobado",
+      "n": 581
+    },
+    {
+      "resultado": "Desaprobado",
+      "n": 86
+    },
+    {
+      "resultado": "Observado",
+      "n": 133
+    }
+  ],
+  "calidad": [
+    {
+      "metrica": "clientes_dw",
+      "valor": 500,
+      "detalle": "Registros en dw.dim_cliente"
+    },
+    {
+      "metrica": "clientes_staging",
+      "valor": 500,
+      "detalle": "Registros en stg.clientes"
+    },
+    {
+      "metrica": "duplicados_dni",
+      "valor": 21,
+      "detalle": "Clientes marcados como duplicado por DNI"
+    },
+    {
+      "metrica": "emails_duplicados_staging",
+      "valor": 15,
+      "detalle": "Emails repetidos en staging"
+    },
+    {
+      "metrica": "inspecciones_fact",
+      "valor": 800,
+      "detalle": "Hechos de inspección cargados"
+    },
+    {
+      "metrica": "vehiculos_staging",
+      "valor": 600,
+      "detalle": "Registros en stg.vehiculos"
+    },
+    {
+      "metrica": "ventas_con_precio_mercado",
+      "valor": 116,
+      "detalle": "Ventas con match de precio de mercado"
+    },
+    {
+      "metrica": "ventas_fact",
+      "valor": 200,
+      "detalle": "Hechos de venta cargados"
+    }
+  ],
+  "marcas": [
+    {
+      "marca": "Suzuki",
+      "total": 1480600.0
+    },
+    {
+      "marca": "Volkswagen",
+      "total": 1388400.0
+    },
+    {
+      "marca": "Toyota",
+      "total": 1193700.0
+    },
+    {
+      "marca": "Hyundai",
+      "total": 1131000.0
+    },
+    {
+      "marca": "Chevrolet",
+      "total": 1091600.0
+    },
+    {
+      "marca": "Honda",
+      "total": 1045300.0
+    },
+    {
+      "marca": "Mitsubishi",
+      "total": 964900.0
+    },
+    {
+      "marca": "Kia",
+      "total": 942200.0
+    }
+  ],
+  "posicion": [
+    {
+      "pos": "Por debajo del mercado",
+      "n": 26
+    },
+    {
+      "pos": "Por encima del mercado",
+      "n": 90
+    },
+    {
+      "pos": "Sin precio de mercado",
+      "n": 84
+    }
+  ],
+  "kpis": {
+    "total_ventas": 10616800.0,
+    "n_ventas": 200,
+    "n_insp": 800,
+    "dup": 21
+  }
+}

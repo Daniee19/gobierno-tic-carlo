@@ -1,0 +1,8 @@
+# Visual Studio / SSIS local artifacts
+**/.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+*.ispac
+*.vsidx

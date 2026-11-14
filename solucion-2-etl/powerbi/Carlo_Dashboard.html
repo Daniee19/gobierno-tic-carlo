@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CARLO — Dashboard BI (Solución 2)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --bad: #f87171;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1e3a5f 0%, var(--bg) 55%);
+      color: var(--text);
+    }
+    header {
+      padding: 1.25rem 1.75rem 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    header h1 { margin: 0; font-size: 1.6rem; letter-spacing: 0.02em; }
+    header p { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.95rem; }
+    nav {
+      display: flex; gap: 0.5rem; padding: 0.75rem 1.75rem 1rem;
+    }
+    nav button {
+      background: transparent; border: 1px solid #334155; color: var(--text);
+      padding: 0.45rem 0.9rem; border-radius: 999px; cursor: pointer;
+    }
+    nav button.active { background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }
+    main { padding: 0 1.75rem 2rem; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.85rem; margin-bottom: 1rem; }
+    .kpi {
+      background: var(--panel); border: 1px solid #334155; border-radius: 14px;
+      padding: 0.9rem 1rem;
+    }
+    .kpi .label { color: var(--muted); font-size: 0.8rem; }
+    .kpi .value { font-size: 1.45rem; font-weight: 700; margin-top: 0.2rem; }
+    .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 0.85rem; }
+    .card {
+      background: var(--panel); border: 1px solid #334155; border-radius: 14px;
+      padding: 0.9rem 1rem; min-height: 320px;
+    }
+    .card h2 { margin: 0 0 0.75rem; font-size: 1rem; color: var(--muted); font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 0.45rem 0.35rem; border-bottom: 1px solid #334155; }
+    th { color: var(--muted); font-weight: 600; }
+    .note { color: var(--muted); font-size: 0.85rem; margin-top: 0.75rem; }
+    @media (max-width: 900px) {
+      .kpis, .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>CARLO — Dashboard analítico</h1>
+      <p>Solución 2 · ETL SSIS → CarloDW → BI · Datos del Data Warehouse</p>
+    </div>
+    <div class="note">Fuente: dw.v_ventas / dw.v_inspecciones / dw.v_calidad_datos</div>
+  </header>
+  <nav>
+    <button class="active" data-page="ventas">Ventas vs mercado</button>
+    <button data-page="inspecciones">Inspecciones</button>
+    <button data-page="calidad">Calidad de datos</button>
+  </nav>
+  <main>
+    <section id="ventas" class="page active">
+      <div class="kpis">
+        <div class="kpi"><div class="label">Total ventas USD</div><div class="value" id="kpiVentas">—</div></div>
+        <div class="kpi"><div class="label">N° ventas</div><div class="value">200</div></div>
+        <div class="kpi"><div class="label">Con precio de mercado</div><div class="value">116</div></div>
+        <div class="kpi"><div class="label">Sobre mercado</div><div class="value">90</div></div>
+      </div>
+      <div class="grid">
+        <div class="card"><h2>Ventas por vendedor</h2><canvas id="chartVend"></canvas></div>
+        <div class="card"><h2>Ventas por marca (top)</h2><canvas id="chartMarca"></canvas></div>
+        <div class="card"><h2>Posición vs precio de mercado</h2><canvas id="chartPos"></canvas></div>
+        <div class="card"><h2>Margen promedio vs mercado (USD)</h2><canvas id="chartMargen"></canvas></div>
+      </div>
+    </section>
+    <section id="inspecciones" class="page">
+      <div class="kpis">
+        <div class="kpi"><div class="label">Total inspecciones</div><div class="value">800</div></div>
+        <div class="kpi"><div class="label">Aprobado</div><div class="value" style="color:var(--ok)">581</div></div>
+        <div class="kpi"><div class="label">Observado</div><div class="value" style="color:var(--warn)">133</div></div>
+        <div class="kpi"><div class="label">Desaprobado</div><div class="value" style="color:var(--bad)">86</div></div>
+      </div>
+      <div class="grid">
+        <div class="card"><h2>Resultado de inspección</h2><canvas id="chartInsp"></canvas></div>
+        <div class="card"><h2>Distribución %</h2><canvas id="chartInspPct"></canvas></div>
+      </div>
+    </section>
+    <section id="calidad" class="page">
+      <div class="kpis">
+        <div class="kpi"><div class="label">Duplicados DNI</div><div class="value" style="color:var(--warn)">21</div></div>
+        <div class="kpi"><div class="label">Emails duplicados</div><div class="value">15</div></div>
+        <div class="kpi"><div class="label">Clientes DW</div><div class="value">500</div></div>
+        <div class="kpi"><div class="label">Hechos venta / insp.</div><div class="value">200 / 800</div></div>
+      </div>
+      <div class="card">
+        <h2>Métricas de calidad (post-ETL)</h2>
+        <table>
+          <thead><tr><th>Métrica</th><th>Valor</th><th>Detalle</th></tr></thead>
+          <tbody id="tblCalidad"></tbody>
+        </table>
+        <p class="note">Los 21 duplicados por DNI se mapean al cliente maestro en el transform SSIS/SQL (bridge_cliente_duplicado).</p>
+      </div>
+    </section>
+  </main>
+  <script>
+    const DATA = {
+      vendedores: [
+        {vendedor:"Mónica Díaz", total:2363400, margen:28577},
+        {vendedor:"Lucía Torres", total:2227300, margen:19161},
+        {vendedor:"Pedro Salazar", total:2022400, margen:26952},
+        {vendedor:"Carlos Ramos", total:2019000, margen:30100},
+        {vendedor:"Ana Vega", total:1984700, margen:21409}
+      ],
+      marcas: [
+        {marca:"Suzuki", total:1480600},{marca:"Volkswagen", total:1388400},
+        {marca:"Toyota", total:1193700},{marca:"Hyundai", total:1131000},
+        {marca:"Chevrolet", total:1091600},{marca:"Honda", total:1045300},
+        {marca:"Mitsubishi", total:964900},{marca:"Kia", total:942200}
+      ],
+      posicion: [
+        {pos:"Por encima del mercado", n:90},
+        {pos:"Sin precio de mercado", n:84},
+        {pos:"Por debajo del mercado", n:26}
+      ],
+      inspecciones: [
+        {resultado:"Aprobado", n:581},
+        {resultado:"Observado", n:133},
+        {resultado:"Desaprobado", n:86}
+      ],
+      calidad: [
+        {metrica:"duplicados_dni", valor:21, detalle:"Clientes marcados como duplicado por DNI"},
+        {metrica:"emails_duplicados_staging", valor:15, detalle:"Emails repetidos en staging"},
+        {metrica:"clientes_dw", valor:500, detalle:"Registros en dw.dim_cliente"},
+        {metrica:"ventas_fact", valor:200, detalle:"Hechos de venta cargados"},
+        {metrica:"inspecciones_fact", valor:800, detalle:"Hechos de inspección cargados"},
+        {metrica:"ventas_con_precio_mercado", valor:116, detalle:"Ventas con match de precio de mercado"},
+        {metrica:"vehiculos_staging", valor:600, detalle:"Registros en stg.vehiculos"},
+        {metrica:"clientes_staging", valor:500, detalle:"Registros en stg.clientes"}
+      ]
+    };
+
+    document.getElementById("kpiVentas").textContent =
+      "$" + DATA.vendedores.reduce((a,b)=>a+b.total,0).toLocaleString("en-US");
+
+    const common = {plugins:{legend:{labels:{color:"#cbd5e1"}}},
+      scales:{x:{ticks:{color:"#94a3b8"}, grid:{color:"#334155"}},
+             y:{ticks:{color:"#94a3b8"}, grid:{color:"#334155"}}}};
+
+    new Chart(document.getElementById("chartVend"), {
+      type:"bar",
+      data:{labels:DATA.vendedores.map(v=>v.vendedor),
+        datasets:[{label:"USD", data:DATA.vendedores.map(v=>v.total), backgroundColor:"#38bdf8"}]},
+      options: common
+    });
+    new Chart(document.getElementById("chartMarca"), {
+      type:"bar",
+      data:{labels:DATA.marcas.map(v=>v.marca),
+        datasets:[{label:"USD", data:DATA.marcas.map(v=>v.total), backgroundColor:"#818cf8"}]},
+      options:{...common, indexAxis:"y"}
+    });
+    new Chart(document.getElementById("chartPos"), {
+      type:"doughnut",
+      data:{labels:DATA.posicion.map(v=>v.pos),
+        datasets:[{data:DATA.posicion.map(v=>v.n), backgroundColor:["#34d399","#94a3b8","#f87171"]}]},
+      options:{plugins:{legend:{labels:{color:"#cbd5e1"}}}}
+    });
+    new Chart(document.getElementById("chartMargen"), {
+      type:"bar",
+      data:{labels:DATA.vendedores.map(v=>v.vendedor),
+        datasets:[{label:"Margen avg USD", data:DATA.vendedores.map(v=>v.margen), backgroundColor:"#fbbf24"}]},
+      options: common
+    });
+    new Chart(document.getElementById("chartInsp"), {
+      type:"bar",
+      data:{labels:DATA.inspecciones.map(v=>v.resultado),
+        datasets:[{label:"Inspecciones", data:DATA.inspecciones.map(v=>v.n),
+          backgroundColor:["#34d399","#fbbf24","#f87171"]}]},
+      options: common
+    });
+    new Chart(document.getElementById("chartInspPct"), {
+      type:"doughnut",
+      data:{labels:DATA.inspecciones.map(v=>v.resultado),
+        datasets:[{data:DATA.inspecciones.map(v=>v.n), backgroundColor:["#34d399","#fbbf24","#f87171"]}]},
+      options:{plugins:{legend:{labels:{color:"#cbd5e1"}}}}
+    });
+
+    const tb = document.getElementById("tblCalidad");
+    DATA.calidad.forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${r.metrica}</td><td><b>${r.valor}</b></td><td>${r.detalle}</td>`;
+      tb.appendChild(tr);
+    });
+
+    document.querySelectorAll("nav button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.page).classList.add("active");
+      });
+    });
+  </script>
+</body>
+</html>
