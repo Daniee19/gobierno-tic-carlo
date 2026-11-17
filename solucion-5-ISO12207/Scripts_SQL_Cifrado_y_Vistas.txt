@@ -1,0 +1,56 @@
+-- ==========================================
+-- FASE: DESARROLLO (CIFRADO DE DATOS)
+-- ==========================================
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+ALTER TABLE clientes ALTER COLUMN dni TYPE text USING dni::text;
+ALTER TABLE clientes ALTER COLUMN telefono TYPE text USING telefono::text;
+UPDATE clientes SET
+    dni = encode(pgp_sym_encrypt(dni, 'llave_maestra_carlo'), 'base64'),
+    nombre = encode(pgp_sym_encrypt(nombre, 'llave_maestra_carlo'), 'base64'),
+    apellido_paterno = encode(pgp_sym_encrypt(apellido_paterno, 'llave_maestra_carlo'), 'base64'),
+    apellido_materno = encode(pgp_sym_encrypt(apellido_materno, 'llave_maestra_carlo'), 'base64'),
+    email = encode(pgp_sym_encrypt(email, 'llave_maestra_carlo'), 'base64'),
+    telefono = encode(pgp_sym_encrypt(telefono, 'llave_maestra_carlo'), 'base64');
+
+UPDATE vehiculos SET placa = encode(pgp_sym_encrypt(placa, 'llave_maestra_carlo'), 'base64');
+
+ALTER TABLE inspecciones ALTER COLUMN telefono TYPE text USING telefono::text;
+UPDATE inspecciones SET
+    nombre_cliente = encode(pgp_sym_encrypt(nombre_cliente, 'llave_maestra_carlo'), 'base64'),
+    email = encode(pgp_sym_encrypt(email, 'llave_maestra_carlo'), 'base64'),
+    telefono = encode(pgp_sym_encrypt(telefono, 'llave_maestra_carlo'), 'base64');
+
+UPDATE ventas SET nombre_cliente = encode(pgp_sym_encrypt(nombre_cliente, 'llave_maestra_carlo'), 'base64');
+
+-- ==========================================
+-- FASE: CALIDAD (VISTAS POR ROL)
+-- ==========================================
+CREATE OR REPLACE VIEW vista_gerente AS
+SELECT 
+    id_cliente,
+    pgp_sym_decrypt(decode(dni, 'base64'), 'llave_maestra_carlo') AS dni,
+    pgp_sym_decrypt(decode(nombre, 'base64'), 'llave_maestra_carlo') AS nombre,
+    pgp_sym_decrypt(decode(apellido_paterno, 'base64'), 'llave_maestra_carlo') AS apellido_paterno,
+    pgp_sym_decrypt(decode(apellido_materno, 'base64'), 'llave_maestra_carlo') AS apellido_materno,
+    pgp_sym_decrypt(decode(email, 'base64'), 'llave_maestra_carlo') AS email,
+    pgp_sym_decrypt(decode(telefono, 'base64'), 'llave_maestra_carlo') AS telefono
+FROM clientes;
+
+CREATE OR REPLACE VIEW vista_mecanico AS
+SELECT 
+    id_cliente,
+    LEFT(pgp_sym_decrypt(decode(nombre, 'base64'), 'llave_maestra_carlo'), 1) || '***' AS nombre,
+    '***' AS apellido,
+    '***' AS dni,
+    '***' AS telefono
+FROM clientes;
+
+CREATE OR REPLACE VIEW vista_freelancer AS
+SELECT 
+    id_cliente,
+    '*****' || RIGHT(pgp_sym_decrypt(decode(dni, 'base64'), 'llave_maestra_carlo'), 3) AS dni_enmascarado,
+    '***' AS nombre,
+    '***' AS email,
+    '***' AS telefono
+FROM clientes;
