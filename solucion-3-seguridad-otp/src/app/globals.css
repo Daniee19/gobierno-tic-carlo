@@ -1,0 +1,40 @@
+:root {
+  --bg: #f6f7f9;
+  --card: #ffffff;
+  --text: #1c2430;
+  --muted: #5b6676;
+  --line: #dfe3e8;
+  --brand: #1d4ed8;
+  --ok: #15803d;
+  --warn: #b45309;
+  --bad: #b91c1c;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+nav { display: flex; gap: 16px; align-items: center; padding: 12px 24px; background: var(--card); border-bottom: 1px solid var(--line); }
+nav a { color: var(--brand); text-decoration: none; font-weight: 500; }
+nav .spacer { flex: 1; }
+main { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+.card.narrow { max-width: 420px; margin: 48px auto; }
+h1 { margin: 0 0 12px; font-size: 1.4rem; }
+label { display: block; font-size: .85rem; color: var(--muted); margin: 12px 0 4px; }
+input, select, button { font: inherit; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line); }
+input, select { width: 100%; }
+button { background: var(--brand); color: #fff; border: 0; cursor: pointer; margin-top: 14px; }
+button.secondary { background: transparent; color: var(--brand); border: 1px solid var(--brand); }
+button:disabled { opacity: .6; cursor: default; }
+.msg { margin-top: 12px; font-size: .9rem; }
+.msg.error { color: var(--bad); }
+.msg.ok { color: var(--ok); }
+.hint { background: #fffbeb; border: 1px dashed var(--warn); padding: 8px 10px; border-radius: 6px; font-size: .85rem; margin-top: 12px; }
+table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; }
+.filters { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 10px; align-items: end; margin-bottom: 16px; }
+.filters button { margin-top: 0; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .78rem; font-weight: 600; }
+.tag.exito { background: #dcfce7; color: var(--ok); }
+.tag.fallo { background: #fef3c7; color: var(--warn); }
+.tag.bloqueado { background: #fee2e2; color: var(--bad); }
+code { font-size: .8rem; }

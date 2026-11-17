@@ -1,0 +1,32 @@
+{
+  "_nota": "Fuente única del proceso: cada requisito se enlaza a los riesgos que mitiga, al código (etiqueta @req) y a las pruebas (ID entre corchetes en el nombre del test). `npm run trazabilidad` valida los enlaces y regenera proceso/matriz-trazabilidad.md.",
+  "riesgos": [
+    { "id": "R-01", "descripcion": "Fuerza bruta para adivinar el OTP", "probabilidad": "Alta", "impacto": "Alto" },
+    { "id": "R-02", "descripcion": "OTP predecible o recuperable si se filtra la base de datos", "probabilidad": "Media", "impacto": "Alto" },
+    { "id": "R-03", "descripcion": "Control de intentos ineficaz en entorno serverless (estado no compartido)", "probabilidad": "Alta", "impacto": "Alto" },
+    { "id": "R-04", "descripcion": "Acciones sin rastro: no se puede investigar un incidente", "probabilidad": "Media", "impacto": "Alto" },
+    { "id": "R-05", "descripcion": "Alteración o borrado de los registros de auditoría", "probabilidad": "Baja", "impacto": "Alto" },
+    { "id": "R-06", "descripcion": "Enumeración de usuarios por mensajes de error distintos", "probabilidad": "Media", "impacto": "Medio" },
+    { "id": "R-07", "descripcion": "Robo o manipulación de la sesión", "probabilidad": "Baja", "impacto": "Alto" },
+    { "id": "R-08", "descripcion": "Un asesor accede a la auditoría (escalada de privilegios)", "probabilidad": "Media", "impacto": "Medio" }
+  ],
+  "requisitos": [
+    { "id": "RF-01", "texto": "Solicitar un código OTP con un correo registrado", "riesgos": [], "diseno": "POST /api/auth/request-otp → otp-service", "verificacion": "prueba" },
+    { "id": "RF-02", "texto": "Verificar el OTP e iniciar sesión", "riesgos": ["R-01"], "diseno": "POST /api/auth/verify-otp → otp-service + sesión", "verificacion": "prueba" },
+    { "id": "RF-03", "texto": "Consultar inspecciones solo con sesión activa", "riesgos": [], "diseno": "GET /api/inspecciones y página /inspecciones", "verificacion": "prueba" },
+    { "id": "RF-04", "texto": "Consultar y filtrar el registro de auditoría", "riesgos": ["R-04"], "diseno": "GET /api/audit y página /auditoria", "verificacion": "prueba" },
+    { "id": "RF-05", "texto": "Cerrar sesión", "riesgos": ["R-07"], "diseno": "POST /api/auth/logout", "verificacion": "prueba" },
+
+    { "id": "RNF-01", "texto": "El OTP tiene 6 dígitos y se genera con un generador criptográfico (crypto.randomInt)", "riesgos": ["R-02"], "diseno": "otp.ts · generateOtp", "verificacion": "prueba" },
+    { "id": "RNF-02", "texto": "El OTP se guarda solo como HMAC-SHA256 con sal y secreto del servidor", "riesgos": ["R-02"], "diseno": "otp.ts · hashOtp / verifyOtpHash", "verificacion": "prueba" },
+    { "id": "RNF-03", "texto": "El OTP vence a los 5 minutos y es de un solo uso", "riesgos": ["R-01"], "diseno": "otp-service · expiración y consumo atómico", "verificacion": "prueba" },
+    { "id": "RNF-04", "texto": "Máximo 3 intentos por código; el intento se cuenta antes de comparar", "riesgos": ["R-01"], "diseno": "otp-service · registerAttempt (UPDATE condicional atómico)", "verificacion": "prueba" },
+    { "id": "RNF-05", "texto": "Rate limiting de 5 intentos por minuto por IP y por correo, con estado compartido y rechazo si el limitador falla", "riesgos": ["R-01", "R-03"], "diseno": "ratelimit.ts (Upstash) + guard en handlers", "verificacion": "prueba" },
+    { "id": "RNF-06", "texto": "Cada acción deja exactamente un evento en audit_log (usuario, acción, recurso, IP, fecha, resultado)", "riesgos": ["R-04"], "diseno": "appendAudit en cada flujo; tabla audit_log", "verificacion": "prueba" },
+    { "id": "RNF-07", "texto": "audit_log es de solo inserción (no admite UPDATE, DELETE ni TRUNCATE)", "riesgos": ["R-05"], "diseno": "Triggers en 001_schema.sql; el almacén no expone modificar/borrar", "verificacion": "manual", "evidencia": "Prueba en psql: UPDATE, DELETE y TRUNCATE rechazados (sql/kpi.sql, punto 4)" },
+    { "id": "RNF-08", "texto": "Error genérico al cliente y misma respuesta para correos registrados o no", "riesgos": ["R-06"], "diseno": "handlers · respuestas uniformes", "verificacion": "prueba" },
+    { "id": "RNF-09", "texto": "Sesión en cookie firmada, HttpOnly, SameSite=Lax, vigencia de 30 minutos", "riesgos": ["R-07"], "diseno": "session.ts", "verificacion": "prueba" },
+    { "id": "RNF-10", "texto": "Solo el rol admin puede consultar la auditoría", "riesgos": ["R-08"], "diseno": "queryAudit · verificación de rol", "verificacion": "prueba" },
+    { "id": "RNF-11", "texto": "Al menos 95 % de 100 intentos de fuerza bruta son bloqueados (KPI)", "riesgos": ["R-01"], "diseno": "Combinación de RNF-03, RNF-04 y RNF-05", "verificacion": "prueba" }
+  ]
+}

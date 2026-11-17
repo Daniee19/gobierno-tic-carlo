@@ -1,0 +1,93 @@
+{
+  "info": {
+    "name": "CARLO - Solución 3 - Seguridad de Verificarlo",
+    "description": "Demo del ataque de fuerza bruta contra el login por OTP.\n\n1) Ejecuta UNA vez la carpeta '1 - Preparación' (pide un OTP).\n2) Ejecuta la carpeta '2 - Fuerza bruta' con el Collection Runner y 100 iteraciones.\n3) Mira la consola de Postman: muestra bloqueados / total y el porcentaje.\n4) Entra a /auditoria como admin (o ejecuta sql/kpi.sql) para ver los intentos registrados.\n\nVariables: baseUrl (por defecto http://localhost:3000) y email.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "email", "value": "asesor1@carlo.demo" },
+    { "key": "total", "value": "0" },
+    { "key": "bloqueados", "value": "0" }
+  ],
+  "item": [
+    {
+      "name": "1 - Preparación",
+      "item": [
+        {
+          "name": "Solicitar OTP (ejecutar una sola vez)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('total', '0');",
+                  "pm.collectionVariables.set('bloqueados', '0');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('El servidor acepta la solicitud (200)', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/request-otp", "host": ["{{baseUrl}}"], "path": ["api", "auth", "request-otp"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2 - Fuerza bruta (100 iteraciones)",
+      "item": [
+        {
+          "name": "Adivinar OTP con código aleatorio",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const code = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');",
+                  "pm.collectionVariables.set('code', code);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const total = Number(pm.collectionVariables.get('total') || 0) + 1;",
+                  "let bloqueados = Number(pm.collectionVariables.get('bloqueados') || 0);",
+                  "if (pm.response.code === 429) { bloqueados += 1; }",
+                  "pm.collectionVariables.set('total', String(total));",
+                  "pm.collectionVariables.set('bloqueados', String(bloqueados));",
+                  "pm.test('La respuesta es 401 (intento fallido) o 429 (bloqueado)', function () {",
+                  "  pm.expect([401, 429]).to.include(pm.response.code);",
+                  "});",
+                  "console.log('Intento ' + total + ' | HTTP ' + pm.response.code + ' | bloqueados ' + bloqueados + '/' + total + ' = ' + (100 * bloqueados / total).toFixed(1) + ' %');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"code\": \"{{code}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/verify-otp", "host": ["{{baseUrl}}"], "path": ["api", "auth", "verify-otp"] }
+          }
+        }
+      ]
+    }
+  ]
+}
