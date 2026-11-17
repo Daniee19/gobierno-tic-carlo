@@ -1,0 +1,42 @@
+# Keycloak + PostgreSQL para el prototipo de gestión de identidades de CARLO.
+# Uso: docker compose up -d   (Keycloak queda en http://localhost:8080)
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    restart: unless-stopped
+    command: start-dev --import-realm
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      # Se usa dentro de realm-carlo.json como ${DEMO_CLIENT_SECRET}
+      DEMO_CLIENT_SECRET: ${DEMO_CLIENT_SECRET}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./realm-carlo.json:/opt/keycloak/data/import/realm-carlo.json:ro
+
+volumes:
+  pgdata:
